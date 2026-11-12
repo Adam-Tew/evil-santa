@@ -310,7 +310,8 @@
 
   // ---- Player preferences (Settings > Christmas effects) -----------------------
   const PREF_KEY = "evilsanta-prefs";
-  const PREF_DEFAULTS = { snow: true, columns: true, garland: true, motion: true, dim: false };
+  const PREF_DEFAULTS = { snow: true, columns: true, garland: true, motion: true, dim: false,
+    blur: 0, panel: 0, outline: false, adminStage: "100" };
   function loadPrefs() {
     try { return Object.assign({}, PREF_DEFAULTS, JSON.parse(localStorage.getItem(PREF_KEY) || "{}")); }
     catch (e) { return Object.assign({}, PREF_DEFAULTS); }
@@ -322,30 +323,68 @@
     p.garland ? delete d.prefGarland : (d.prefGarland = "off");
     p.motion ? delete d.prefMotion : (d.prefMotion = "off");
     p.dim ? (d.prefDim = "on") : delete d.prefDim;
+    p.outline ? (d.prefOutline = "on") : delete d.prefOutline;
+    const st = document.documentElement.style;
+    p.blur > 0 ? st.setProperty("--pref-blur", p.blur + "px") : st.removeProperty("--pref-blur");
+    if (p.panel > 0) { d.prefPanel = "on"; st.setProperty("--pref-panel", p.panel); }
+    else { delete d.prefPanel; st.removeProperty("--pref-panel"); }
+  }
+  function prefLabel(el) {
+    const out = document.querySelector(`.spirit-pref-val[data-for="${el.id}"]`);
+    if (!out) return;
+    out.textContent = el.dataset.pref === "blur" ? (el.value > 0 ? el.value + " px" : "off") : (el.value > 0 ? el.value + "%" : "off");
   }
   function bindPrefsForm() {
     const form = document.getElementById("spirit-prefs");
     if (!form) return;
     const saved = document.getElementById("pref-saved");
-    const sync = (p) => form.querySelectorAll("[data-pref]").forEach((el) => { el.checked = !!p[el.dataset.pref]; });
+    const sync = (p) => form.querySelectorAll("[data-pref]").forEach((el) => {
+      if (el.type === "checkbox") el.checked = !!p[el.dataset.pref];
+      else { el.value = String(p[el.dataset.pref]); prefLabel(el); }
+    });
     const save = (p) => {
       try { localStorage.setItem(PREF_KEY, JSON.stringify(p)); } catch (e) { /* ignore */ }
       applyPrefs(p);
       if (saved) { saved.hidden = false; clearTimeout(saved._t); saved._t = setTimeout(() => { saved.hidden = true; }, 1500); }
     };
     sync(loadPrefs());
-    form.addEventListener("change", (e) => {
+    const onChange = (e) => {
       const el = e.target.closest("[data-pref]");
       if (!el) return;
       const p = loadPrefs();
-      p[el.dataset.pref] = el.checked;
+      if (el.type === "checkbox") p[el.dataset.pref] = el.checked;
+      else if (el.type === "range") { p[el.dataset.pref] = Number(el.value); prefLabel(el); }
+      else p[el.dataset.pref] = el.value;
       save(p);
-    });
+      if (el.dataset.pref === "adminStage") applyAdminView();
+    };
+    form.addEventListener("input", onChange);
+    form.addEventListener("change", onChange);
     document.getElementById("pref-reset").addEventListener("click", () => {
       const p = Object.assign({}, PREF_DEFAULTS);
       sync(p);
       save(p);
+      applyAdminView();
     });
+  }
+
+  // Admins don't play, so they can view the site at any stage (default: 100%).
+  function adminStageIndex() {
+    if (!window.spiritIsAdmin) return null;
+    const v = loadPrefs().adminStage;
+    if (v === "progress") return null;
+    return stageIndexFor(parseInt(v, 10) || 0);
+  }
+  function applyAdminView() {
+    const idx = adminStageIndex();
+    if (idx === null || !$("#spirit-meter")) return false;
+    state = { best: idx, shown: idx };
+    progress = { solved: 0, total: 0, pct: STAGES[idx].at };
+    applyStage(idx, { animate: false });
+    renderMeter();
+    const detail = $("#spirit-meter-detail");
+    if (detail) detail.textContent = "Admin view";
+    return true;
   }
 
   // ---- Coal -> present celebration ----------------------------------------------
@@ -634,6 +673,7 @@
     addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { buildGarland(); measureNavbar(); }, 150); });
     if (!authed) return;
     $("#spirit-ignite").addEventListener("click", ignite);
+    if (applyAdminView()) return;
     refresh();
     // CTFd fires this after a correct flag submission on the challenge board
     window.addEventListener("load-challenges", () => setTimeout(refresh, 400));

@@ -7,6 +7,7 @@
   "teams.private": "team", "users.private": "user",
   "scoreboard.listing": "scoreboard",
   "views.notifications": "notifications", "views.settings": "settings",
+  "naughty_list.listing": "naughty",
 } -%}
 {#- A page can pick its own background with {% set spirit_page = "..." %} (e.g. the 404 page) -#}
 {%- set spirit_bg = spirit_page if spirit_page is defined else spirit_bg_map.get(request.endpoint) -%}
@@ -14,7 +15,7 @@
 {%- set spirit_col_pairs = {
   "challenges": [3, 1], "auth": [4, 0], "teams": [2, 3], "users": [1, 2], "scoreboard": [0, 4],
   "join": [5, 5], "team": [6, 6], "user": [7, 7], "notifications": [8, 8], "settings": [9, 9],
-  "404": [3, 1],
+  "naughty": [10, 10], "404": [3, 1],
 } -%}
 {%- set spirit_cols = spirit_bg or request.endpoint == "challenges.listing" -%}
 {%- set spirit_pair = spirit_col_pairs.get(spirit_bg or "challenges") -%}
@@ -37,7 +38,7 @@
   {{ Plugins.styles }}
 
   {# Evil Santa is dark-only: the light/dark switcher is removed on purpose #}
-  <script>document.documentElement.setAttribute("data-bs-theme", "dark");</script>
+  <script>document.documentElement.setAttribute("data-bs-theme", "dark"); window.spiritIsAdmin = {{ 'true' if is_admin() else 'false' }};</script>
   <script>
     /* Player's Christmas-effects choices (Settings > Christmas effects), applied before the page draws */
     (function () {
@@ -49,6 +50,10 @@
         if (p.garland === false) d.prefGarland = "off";
         if (p.motion === false) d.prefMotion = "off";
         if (p.dim === true) d.prefDim = "on";
+        if (p.outline === true) d.prefOutline = "on";
+        var st = document.documentElement.style;
+        if (p.blur > 0) st.setProperty("--pref-blur", p.blur + "px");
+        if (p.panel > 0) { d.prefPanel = "on"; st.setProperty("--pref-panel", p.panel); }
       } catch (e) {}
     })();
   </script>

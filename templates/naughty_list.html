@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="jumbotron">
+    <div class="container">
+      <h1>Naughty List</h1>
+    </div>
+  </div>
+
+  <div class="container">
+    <p class="spirit-naughty-intro">
+      Santa sees everything. So do the admins. Cheating or breaking the rules lands you here, for everyone to see.
+    </p>
+
+    {% for entry in entries %}
+      <div class="spirit-naughty-entry {{ 'is-ban' if entry.action == 'ban' else 'is-warning' }}">
+        <div class="spirit-naughty-head">
+          <span class="spirit-naughty-who">
+            {% if entry.team and not entry.team.banned %}
+              <a href="{{ url_for('teams.public', team_id=entry.team.id) }}">{{ entry.name }}</a>
+            {% elif entry.user and not entry.user.banned %}
+              <a href="{{ url_for('users.public', user_id=entry.user.id) }}">{{ entry.name }}</a>
+            {% else %}
+              {{ entry.name }}
+            {% endif %}
+            <small>{{ 'team' if entry.team_id else 'player' }}</small>
+          </span>
+          <span class="spirit-naughty-verdict">{{ 'Banned' if entry.action == 'ban' else 'Warning' }}</span>
+        </div>
+        <p class="spirit-naughty-reason">{{ entry.reason }}</p>
+        <small class="spirit-naughty-date"><span data-time="{{ entry.date | isoformat }}"></span></small>
+      </div>
+    {% else %}
+      <div class="spirit-naughty-empty">
+        <div class="spirit-naughty-empty-icon">&#127873;</div>
+        <h3>Nobody is on the Naughty List.</h3>
+        <p>Yet.</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ Assets.js("assets/js/notifications.js") }}
+{% endblock %}

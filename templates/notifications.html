@@ -9,12 +9,12 @@
 		</div>
 	</div>
 	<div class="container">
-		{% if not notifications %}
-		<h2 class="text-center">
-			{% trans %}There are no notifications yet{% endtrans %}
-		</h2>
-		{% endif %}
-		{% for notification in notifications %}
+		{#- Notifications addressed to one team or player (e.g. from the Naughty List) are only shown to them -#}
+		{% for notification in notifications
+		   if (notification.user_id is none and notification.team_id is none)
+		   or is_admin()
+		   or (notification.user_id and notification.user_id == Session.id)
+		   or (notification.team_id and notification.team_id == Team.id) %}
 		<div class="card bg-body-tertiary mb-4">
 			<div class="card-body">
 				<h3 class="card-title">{{ notification.title }}</h3>
@@ -24,6 +24,10 @@
 				</blockquote>
 			</div>
 		</div>
+		{% else %}
+		<h2 class="text-center">
+			{% trans %}There are no notifications yet{% endtrans %}
+		</h2>
 		{% endfor %}
 	</div>
 {% endblock %}

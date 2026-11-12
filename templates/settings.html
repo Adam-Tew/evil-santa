@@ -288,6 +288,43 @@
                 <input class="form-check-input" type="checkbox" role="switch" id="pref-dim" data-pref="dim">
                 <label class="form-check-label" for="pref-dim"><b>Calmer backgrounds</b><br><small>Darkens and softens the big pictures behind the pages.</small></label>
               </div>
+              <h4 class="mt-4 mb-2">Challenge page</h4>
+              <p class="small mb-3">If the challenges are hard to see against the scene behind them, try one or more of these.</p>
+              <div class="mb-3">
+                <label class="form-label" for="pref-blur"><b>Blur the scene</b> <span class="spirit-pref-val" data-for="pref-blur"></span></label>
+                <input type="range" class="form-range" id="pref-blur" data-pref="blur" min="0" max="12" step="1" value="0">
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="pref-panel"><b>Backdrop behind the challenges</b> <span class="spirit-pref-val" data-for="pref-panel"></span></label>
+                <input type="range" class="form-range" id="pref-panel" data-pref="panel" min="0" max="90" step="5" value="0">
+                <small>A see-through silver-gold sheet behind the categories and challenges. 0% is off.</small>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="pref-outline" data-pref="outline">
+                <label class="form-check-label" for="pref-outline"><b>Card outlines</b><br><small>A thin snowy outline and glow around every challenge, so dark coal stands out on dark scenes.</small></label>
+              </div>
+
+              {% if is_admin() %}
+              <h4 class="mt-4 mb-2">Admin view</h4>
+              <p class="small mb-2">Admins don't solve challenges, so pick which stage of the story you want to see the site at.</p>
+              <div class="mb-3">
+                <select class="form-select" id="pref-adminStage" data-pref="adminStage">
+                  <option value="100">Full Christmas spirit (100%)</option>
+                  <option value="90">90%: Christmas is saved</option>
+                  <option value="80">80%</option>
+                  <option value="70">70%</option>
+                  <option value="60">60%</option>
+                  <option value="50">50%</option>
+                  <option value="40">40%</option>
+                  <option value="30">30%</option>
+                  <option value="20">20%</option>
+                  <option value="10">10%</option>
+                  <option value="0">0%: Coal-black Christmas</option>
+                  <option value="progress">My own progress</option>
+                </select>
+              </div>
+              {% endif %}
+
               <button type="button" class="btn btn-outline-secondary btn-sm" id="pref-reset">Reset to the full experience</button>
               <span class="ms-2 small" id="pref-saved" hidden>Saved</span>
             </form>
