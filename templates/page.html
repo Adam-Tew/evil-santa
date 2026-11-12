@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% if request.endpoint == "views.static_html" and (request.view_args or {}).get("route") == "index" %}
+    {% include "components/spirit_comic.html" %}
+  {% else %}
+  <div class="container">
+    {{ content | safe }}
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {{ Assets.js("assets/js/page.js") }}
+  {% if request.endpoint == "views.static_html" and (request.view_args or {}).get("route") == "index" %}
+  <script src="{{ url_for('views.themes_beta', theme='evil-santa', path='spirit/vendor/page-flip.browser.js') }}"></script>
+  <script src="{{ url_for('views.themes_beta', theme='evil-santa', path='spirit/comic.js') }}"></script>
+  {% endif %}
+{% endblock %}

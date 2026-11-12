@@ -1,0 +1,946 @@
+/* Evil Santa — Christmas Spirit layer
+ * --spirit goes from 0 (coal grey) to 1 (full Christmas). Set by spirit.js. */
+
+
+/* Registered so the whole site can fade smoothly between stages */
+@property --spirit {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+:root.spirit-animate { transition: --spirit 2.2s ease; }
+
+:root {
+  --spirit: 0;
+  --img-navbar: url("/themes/evil-santa/static/spirit/ui/navbar.svg");
+  --img-meter: url("/themes/evil-santa/static/spirit/ui/meter.svg");
+  --img-coal: url("/themes/evil-santa/static/spirit/ui/coal.svg");
+  --sp: calc(var(--spirit) * 100%);
+  --xmas-red: #d7263d;
+  --xmas-green: #1f9d55;
+  --xmas-gold: #ffcf3f;
+  --coal: #1b1c1f;
+  --ash: #5b5d63;
+  --accent: color-mix(in srgb, var(--xmas-red) var(--sp), #8a8d93);
+  --accent-2: color-mix(in srgb, var(--xmas-green) var(--sp), #6b6e74);
+  --meter-h: 54px;
+}
+
+body {
+  font-family: "Nunito", system-ui, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 15% 110%, color-mix(in srgb, #2a1830 var(--sp), #101113) 0%, transparent 70%),
+    color-mix(in srgb, #10162b var(--sp), #0d0e10);
+  padding-bottom: calc(var(--meter-h) + 12px);
+  transition: background-color 1.2s ease;
+}
+
+h1, h2, h3, .navbar-brand, .spirit-title {
+  font-family: "Mountains of Christmas", "Nunito", cursive;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Navbar + wreath ---------- */
+.navbar.bg-dark {
+  isolation: isolate;
+  background: #101113 !important;
+  border-bottom: 3px solid color-mix(in srgb, var(--xmas-gold) var(--sp), #2b2c30);
+}
+/* Image layer: grey and dim at 0%, full colour at 90%+ */
+.navbar.bg-dark::before,
+.spirit-meter-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  background-position: center;
+  filter: grayscale(calc(1 - var(--spirit))) brightness(calc(.55 + .45 * var(--spirit)));
+}
+.navbar.bg-dark::before { background-image: var(--img-navbar); }
+/* Tint layer: coal black -> Christmas red, keeps the links readable */
+.navbar.bg-dark::after,
+.spirit-meter-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.navbar.bg-dark::after {
+  background: linear-gradient(180deg,
+      color-mix(in srgb, #8e0f22 var(--sp), #0b0b0d),
+      color-mix(in srgb, #5c0915 var(--sp), #060607));
+  opacity: calc(.82 - .22 * var(--spirit));
+}
+.navbar.bg-dark {
+  /* Bootstrap draws navbar links at 55% white; make them solid and readable */
+  --bs-navbar-color: #ffffff;
+  --bs-navbar-hover-color: #ffe08a;
+  --bs-navbar-active-color: #ffd447;
+  --bs-nav-link-color: #ffffff;
+  --bs-nav-link-hover-color: #ffe08a;
+}
+.navbar .nav-link,
+.navbar .navbar-brand {
+  color: #fff;
+  opacity: 1;
+  font-weight: 700;
+  text-shadow: 0 0 2px #000, 0 1px 4px rgba(0, 0, 0, .95), 0 0 10px rgba(0, 0, 0, .7);
+}
+.navbar .nav-link:hover,
+.navbar .nav-link:focus-visible { color: #ffe08a; }
+.navbar .nav-link.active { color: #ffd447; }
+
+/* ---------- Garland along the bottom of the navbar ---------- */
+.spirit-garland {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 34px;
+  margin-top: -6px;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .5));
+}
+.spirit-garland svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.spirit-garland .rope { fill: none; stroke: color-mix(in srgb, #1d5e29 var(--sp), #26272a); stroke-width: 3; }
+.spirit-garland .leaf { fill: color-mix(in srgb, #2e8b3d var(--sp), #3b3d40); }
+.spirit-garland .leaf.alt { fill: color-mix(in srgb, #3fae4f var(--sp), #46484c); }
+.spirit-garland .bulb { fill: #2c2d31; stroke: #111; stroke-width: .8; transition: fill .35s ease, filter .35s ease; }
+.spirit-garland .bulb.on {
+  fill: var(--c);
+  filter: drop-shadow(0 0 3px var(--c)) drop-shadow(0 0 8px var(--c));
+  animation: twinkle 2.4s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+.spirit-garland.multiverse .bulb.on { animation: rainbow 3s linear infinite, twinkle 1.6s ease-in-out infinite; }
+.spirit-garland .cap { fill: #1b1b1d; }
+
+/* ---------- Falling snow (grey ash at 0%, sparkling snow at 90%+) ---------- */
+.spirit-snow {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.spirit-wreath {
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 92px;
+  height: 104px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 1031;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .5));
+}
+.spirit-wreath svg { width: 100%; height: 100%; overflow: visible; }
+.spirit-wreath .leaf {
+  fill: color-mix(in srgb, #2e8b3d var(--sp), #3b3d40);
+  stroke: color-mix(in srgb, #1d5e29 var(--sp), #26272a);
+  stroke-width: 1;
+  transition: fill 1.5s ease, stroke 1.5s ease;
+}
+.spirit-wreath .leaf.alt { fill: color-mix(in srgb, #3fae4f var(--sp), #46484c); }
+.spirit-wreath .berry { fill: color-mix(in srgb, #e01e37 var(--sp), #2a2b2e); transition: fill 1.5s ease; }
+.spirit-wreath .bow { fill: color-mix(in srgb, #d7263d var(--sp), #333539); transition: fill 1.5s ease; }
+.spirit-wreath .ribbon { stroke: color-mix(in srgb, var(--xmas-gold) var(--sp), #3a3b3f); }
+.spirit-wreath .wire { stroke: #111; stroke-width: 1.2; fill: none; }
+.spirit-wreath .bulb {
+  fill: #2c2d31;
+  stroke: #111;
+  stroke-width: .8;
+  transition: fill .35s ease, filter .35s ease;
+}
+.spirit-wreath .bulb.on { fill: var(--c); filter: drop-shadow(0 0 4px var(--c)) drop-shadow(0 0 9px var(--c)); }
+.spirit-wreath .bulb.on { animation: twinkle 2.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.spirit-wreath.multiverse .bulb.on { animation: rainbow 3s linear infinite, twinkle 1.6s ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+@keyframes rainbow { from { filter: hue-rotate(0) drop-shadow(0 0 6px var(--c)); } to { filter: hue-rotate(360deg) drop-shadow(0 0 6px var(--c)); } }
+
+@media (max-width: 767px) {
+  .spirit-wreath { left: auto; right: 70px; transform: none; width: 64px; height: 72px; }
+}
+
+/* ---------- Scene (challenge board) ---------- */
+/* ---------- Stage layout: illustrated columns + an uncropped 16:9 picture ---------- */
+/* --pspirit: how much colour pages show: the team's spirit level (0 for visitors). */
+:root { --meter-eff: 0px; --pspirit: var(--spirit); }
+:root:has(.spirit-meter-bar) { --meter-eff: var(--meter-h); }
+:root { --psp: calc(var(--pspirit) * 100%); }
+
+/* Each column takes exactly the space the 16:9 picture leaves free (never thinner than 150px) */
+html[data-spirit-cols] {
+  --col-w: clamp(150px, calc((100vw - (100vh - var(--nav-h, 58px) - var(--meter-eff)) * 16 / 9) / 2), 26vw);
+}
+html[data-spirit-cols] main .container {
+  max-width: min(1320px, calc(100vw - 2 * var(--col-w) - 32px));
+}
+@media (max-width: 991px) {
+  html[data-spirit-cols] { --col-w: 0px; }
+  .spirit-col { display: none; }
+}
+
+.spirit-col {
+  position: fixed;
+  top: var(--nav-h, 58px);
+  bottom: var(--meter-eff);
+  width: var(--col-w);
+  z-index: -2;
+  /* webp over png over a plain candy-cane pillar, whichever exists */
+  background:
+    var(--col-webp, none) center top / auto 100% no-repeat,
+    var(--col-png, none) center top / auto 100% no-repeat,
+    repeating-linear-gradient(-35deg, #d7263d 0 18px, #fff6f0 18px 36px) center / 46% 100% no-repeat,
+    linear-gradient(180deg, #0f1730, #090c18);
+  filter: grayscale(calc(1 - var(--pspirit))) brightness(calc(.7 + .3 * var(--pspirit)));
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, .6);
+}
+.spirit-col.left { left: 0; }
+.spirit-col.right { right: 0; }
+/* Where column meets picture: a slim gold-and-red trim and a soft shadow onto the picture */
+.spirit-col::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, .35), transparent 30%, transparent 70%, rgba(0, 0, 0, .35)),
+    repeating-linear-gradient(-45deg, #e2b13c 0 6px, #b3142b 6px 12px);
+}
+.spirit-col.left::after { right: 0; box-shadow: 10px 0 22px rgba(0, 0, 0, .55); }
+.spirit-col.right::after { left: 0; box-shadow: -10px 0 22px rgba(0, 0, 0, .55); }
+
+/* ---------- Player preferences (Settings > Christmas effects) ---------- */
+/* Simple columns: a thin candy-cane pillar beside the picture instead of the illustrations */
+html[data-pref-columns="simple"] .spirit-col {
+  background: linear-gradient(180deg, #0f1730, #090c18);
+}
+html[data-pref-columns="simple"] .spirit-col::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  border-radius: 12px;
+  background: repeating-linear-gradient(-35deg, #d7263d 0 14px, #fff6f0 14px 28px);
+  box-shadow: inset -4px 0 6px rgba(0, 0, 0, .35), inset 3px 0 4px rgba(255, 255, 255, .35);
+}
+html[data-pref-columns="simple"] .spirit-col.left::before { right: 14px; }
+html[data-pref-columns="simple"] .spirit-col.right::before { left: 14px; }
+html[data-pref-snow="off"] .spirit-snow { display: none; }
+html[data-pref-garland="off"] .spirit-page .category-header::before,
+html[data-pref-garland="off"] .spirit-page .category-header::after { display: none; }
+html[data-pref-garland="off"] .spirit-page .category-header { padding-bottom: 0; }
+html[data-pref-motion="off"] *,
+html[data-pref-motion="off"] *::before,
+html[data-pref-motion="off"] *::after { animation: none !important; }
+html[data-pref-dim="on"] .spirit-scene-frame,
+html[data-pref-dim="on"] .spirit-page-bg::after { filter: brightness(.6) saturate(.7) blur(1.5px); }
+html[data-pref-dim="on"] .spirit-col { opacity: .55; }
+html[data-spirit-bg] .spirit-prefs .form-check-input { width: 2.6em; height: 1.3em; margin-right: .6rem; }
+html[data-spirit-bg] .spirit-prefs .form-check-input:checked { background-color: #b3142b; border-color: #b3142b; }
+
+#spirit-scene {
+  position: fixed;
+  left: var(--col-w, 0px);
+  right: var(--col-w, 0px);
+  top: var(--nav-h, 56px);
+  bottom: var(--meter-eff);
+  z-index: -2;
+  overflow: hidden;
+}
+.spirit-scene-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.03);
+  transition: opacity 1.6s ease, transform 6s ease;
+}
+.spirit-scene-layer.active { opacity: 1; transform: scale(1); }
+/* A blurred copy fills any small gap above the picture */
+.spirit-scene-fill {
+  position: absolute;
+  inset: -40px;
+  background: var(--scene) center / cover no-repeat;
+  filter: blur(22px) brightness(.45);
+}
+.spirit-scene-frame {
+  position: absolute;
+  inset: 0;
+  background: var(--scene) center bottom / contain no-repeat;
+}
+
+/* "Fill the screen" mode: no columns, the scene covers everything (crops edges) */
+html[data-scene-fit="cover"] #spirit-scene { left: 0; right: 0; }
+html[data-scene-fit="cover"] .spirit-col { display: none; }
+html[data-scene-fit="cover"] .spirit-scene-frame { background-size: cover; }
+
+/* Keeps the challenge cards readable above any artwork */
+#spirit-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(8, 9, 12, .45) 0%, rgba(8, 9, 12, .15) 35%, rgba(8, 9, 12, .45) 100%);
+}
+
+.spirit-story {
+  max-width: 760px;
+  margin: 0 auto 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  background: rgba(12, 13, 16, .72);
+  border: 1px solid color-mix(in srgb, var(--xmas-gold) var(--sp), #34363b);
+  backdrop-filter: blur(6px);
+  text-align: center;
+}
+.spirit-story .spirit-chapter {
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  font-size: .75rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.spirit-story .spirit-title { font-size: 2rem; margin: .1rem 0 .35rem; color: #f4f1ea; }
+.spirit-story p { margin: 0; color: #c9c6c0; }
+
+.spirit-page .jumbotron { background: transparent !important; }
+.spirit-page .jumbotron h1 { text-shadow: 0 3px 12px rgba(0, 0, 0, .8); }
+.spirit-page .category-header {
+  position: relative;
+  padding-bottom: 30px;
+}
+.spirit-page .category-header h3 {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  margin: 0;
+  padding: .25rem 1.1rem;
+  border-radius: 12px;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, .7);
+  background: linear-gradient(180deg,
+      color-mix(in srgb, #c4182f var(--sp), #2a2b30),
+      color-mix(in srgb, #8e0f22 var(--sp), #17181b));
+  border: 2px solid color-mix(in srgb, var(--xmas-gold) var(--sp), #44464c);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .5);
+}
+/* A garland of lights hanging under every category row */
+.spirit-page .category-header::before,
+.spirit-page .category-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 36px;
+  background-repeat: repeat-x;
+  background-size: 140px 36px;
+  pointer-events: none;
+}
+.spirit-page .category-header::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='36' viewBox='0 0 140 36'%3E%3Cpath d='M0 5 Q70 39 140 5' fill='none' stroke='%232a2b2e' stroke-width='3'/%3E%3Cellipse cx='0.0' cy='5.0' rx='7' ry='3.2' fill='%2346484c' transform='rotate(0 0.0 5.0)'/%3E%3Cellipse cx='10.8' cy='9.8' rx='7' ry='3.2' fill='%233b3d40' transform='rotate(47 10.8 9.8)'/%3E%3Cellipse cx='21.5' cy='13.9' rx='7' ry='3.2' fill='%2346484c' transform='rotate(94 21.5 13.9)'/%3E%3Cellipse cx='32.3' cy='17.1' rx='7' ry='3.2' fill='%233b3d40' transform='rotate(141 32.3 17.1)'/%3E%3Cellipse cx='43.1' cy='19.5' rx='7' ry='3.2' fill='%2346484c' transform='rotate(8 43.1 19.5)'/%3E%3Cellipse cx='53.8' cy='21.1' rx='7' ry='3.2' fill='%233b3d40' transform='rotate(55 53.8 21.1)'/%3E%3Cellipse cx='64.6' cy='21.9' rx='7' ry='3.2' fill='%2346484c' transform='rotate(102 64.6 21.9)'/%3E%3Cellipse cx='75.4' cy='21.9' rx='7' ry='3.2' fill='%233b3d40' transform='rotate(149 75.4 21.9)'/%3E%3Cellipse cx='86.2' cy='21.1' rx='7' ry='3.2' fill='%2346484c' transform='rotate(16 86.2 21.1)'/%3E%3Cellipse cx='96.9' cy='19.5' rx='7' ry='3.2' fill='%233b3d40' transform='rotate(63 96.9 19.5)'/%3E%3Cellipse cx='107.7' cy='17.1' rx='7' ry='3.2' fill='%2346484c' transform='rotate(110 107.7 17.1)'/%3E%3Cellipse cx='118.5' cy='13.9' rx='7' ry='3.2' fill='%233b3d40' transform='rotate(157 118.5 13.9)'/%3E%3Cellipse cx='129.2' cy='9.8' rx='7' ry='3.2' fill='%2346484c' transform='rotate(24 129.2 9.8)'/%3E%3Cellipse cx='140.0' cy='5.0' rx='7' ry='3.2' fill='%233b3d40' transform='rotate(71 140.0 5.0)'/%3E%3Crect x='33.2' y='18.8' width='3.6' height='3' fill='%231b1b1d'/%3E%3Cellipse cx='35.0' cy='25.8' rx='3.2' ry='4.6' fill='%232c2d31' stroke='%23111' stroke-width='.8'/%3E%3Crect x='68.2' y='23.0' width='3.6' height='3' fill='%231b1b1d'/%3E%3Cellipse cx='70.0' cy='30.0' rx='3.2' ry='4.6' fill='%232c2d31' stroke='%23111' stroke-width='.8'/%3E%3Crect x='103.2' y='18.8' width='3.6' height='3' fill='%231b1b1d'/%3E%3Cellipse cx='105.0' cy='25.8' rx='3.2' ry='4.6' fill='%232c2d31' stroke='%23111' stroke-width='.8'/%3E%3C/svg%3E"); }
+.spirit-page .category-header::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='36' viewBox='0 0 140 36'%3E%3Cdefs%3E%3Cfilter id='g' x='-1' y='-1' width='3' height='3'%3E%3CfeGaussianBlur stdDeviation='2.2'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M0 5 Q70 39 140 5' fill='none' stroke='%231d5e29' stroke-width='3'/%3E%3Cellipse cx='0.0' cy='5.0' rx='7' ry='3.2' fill='%233fae4f' transform='rotate(0 0.0 5.0)'/%3E%3Cellipse cx='10.8' cy='9.8' rx='7' ry='3.2' fill='%232e8b3d' transform='rotate(47 10.8 9.8)'/%3E%3Cellipse cx='21.5' cy='13.9' rx='7' ry='3.2' fill='%233fae4f' transform='rotate(94 21.5 13.9)'/%3E%3Cellipse cx='32.3' cy='17.1' rx='7' ry='3.2' fill='%232e8b3d' transform='rotate(141 32.3 17.1)'/%3E%3Cellipse cx='43.1' cy='19.5' rx='7' ry='3.2' fill='%233fae4f' transform='rotate(8 43.1 19.5)'/%3E%3Cellipse cx='53.8' cy='21.1' rx='7' ry='3.2' fill='%232e8b3d' transform='rotate(55 53.8 21.1)'/%3E%3Cellipse cx='64.6' cy='21.9' rx='7' ry='3.2' fill='%233fae4f' transform='rotate(102 64.6 21.9)'/%3E%3Cellipse cx='75.4' cy='21.9' rx='7' ry='3.2' fill='%232e8b3d' transform='rotate(149 75.4 21.9)'/%3E%3Cellipse cx='86.2' cy='21.1' rx='7' ry='3.2' fill='%233fae4f' transform='rotate(16 86.2 21.1)'/%3E%3Cellipse cx='96.9' cy='19.5' rx='7' ry='3.2' fill='%232e8b3d' transform='rotate(63 96.9 19.5)'/%3E%3Cellipse cx='107.7' cy='17.1' rx='7' ry='3.2' fill='%233fae4f' transform='rotate(110 107.7 17.1)'/%3E%3Cellipse cx='118.5' cy='13.9' rx='7' ry='3.2' fill='%232e8b3d' transform='rotate(157 118.5 13.9)'/%3E%3Cellipse cx='129.2' cy='9.8' rx='7' ry='3.2' fill='%233fae4f' transform='rotate(24 129.2 9.8)'/%3E%3Cellipse cx='140.0' cy='5.0' rx='7' ry='3.2' fill='%232e8b3d' transform='rotate(71 140.0 5.0)'/%3E%3Crect x='33.2' y='18.8' width='3.6' height='3' fill='%231b1b1d'/%3E%3Cellipse cx='35.0' cy='25.8' rx='5' ry='6.5' fill='%23ff3b3b' filter='url(%23g)' opacity='.9'/%3E%3Cellipse cx='35.0' cy='25.8' rx='3.2' ry='4.6' fill='%23ff3b3b' stroke='%23111' stroke-width='.8'/%3E%3Crect x='68.2' y='23.0' width='3.6' height='3' fill='%231b1b1d'/%3E%3Cellipse cx='70.0' cy='30.0' rx='5' ry='6.5' fill='%23ffd447' filter='url(%23g)' opacity='.9'/%3E%3Cellipse cx='70.0' cy='30.0' rx='3.2' ry='4.6' fill='%23ffd447' stroke='%23111' stroke-width='.8'/%3E%3Crect x='103.2' y='18.8' width='3.6' height='3' fill='%231b1b1d'/%3E%3Cellipse cx='105.0' cy='25.8' rx='5' ry='6.5' fill='%234cc3ff' filter='url(%23g)' opacity='.9'/%3E%3Cellipse cx='105.0' cy='25.8' rx='3.2' ry='4.6' fill='%234cc3ff' stroke='%23111' stroke-width='.8'/%3E%3C/svg%3E");
+  opacity: var(--spirit);
+  animation: garland-twinkle 2.6s ease-in-out infinite;
+}
+@keyframes garland-twinkle { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.35); } }
+
+/* ---------- Challenge cards: coal (unsolved) and presents (solved) ---------- */
+.spirit-slot { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .55)); }
+.challenge-button.btn-dark {
+  position: relative;
+  min-height: 112px;
+  border: 0 !important;
+  border-radius: 0;
+  color: #f4f1ea;
+  transition: transform .15s ease;
+}
+.challenge-button.btn-dark:hover,
+.challenge-button.btn-dark:focus-visible { transform: translateY(-4px) rotate(-.6deg); }
+.challenge-button .challenge-inner { position: relative; z-index: 2; }
+
+/* Coal: an irregular, faceted lump */
+.challenge-coal {
+  background:
+    radial-gradient(120% 90% at 30% 20%, rgba(255, 255, 255, .10), transparent 45%),
+    radial-gradient(100% 100% at 80% 100%, rgba(0, 0, 0, .55), transparent 60%),
+    var(--img-coal) center / var(--fit-coal, 160px auto), #161618 !important;
+}
+.challenge-coal.coal-0 { clip-path: polygon(4% 18%, 22% 4%, 48% 9%, 70% 1%, 93% 12%, 99% 42%, 95% 74%, 82% 96%, 52% 91%, 27% 99%, 6% 86%, 0% 52%); }
+.challenge-coal.coal-1 { clip-path: polygon(0% 30%, 14% 8%, 38% 0%, 62% 7%, 86% 3%, 100% 26%, 96% 60%, 100% 84%, 74% 100%, 44% 94%, 18% 100%, 3% 74%); }
+.challenge-coal.coal-2 { clip-path: polygon(8% 8%, 34% 2%, 56% 12%, 80% 0%, 97% 20%, 92% 50%, 100% 78%, 86% 98%, 58% 92%, 34% 100%, 10% 92%, 2% 60%, 6% 36%); }
+.challenge-coal .challenge-inner p { text-shadow: 0 2px 4px #000; font-weight: 700; }
+.challenge-coal .challenge-inner span { color: #ff8a3d; text-shadow: 0 0 8px rgba(255, 110, 40, .6); font-weight: 800; }
+/* Hover: the coal starts to smoulder */
+.challenge-coal:hover, .challenge-coal:focus-visible {
+  background:
+    radial-gradient(80% 70% at 50% 110%, rgba(255, 90, 30, .45), transparent 70%),
+    radial-gradient(120% 90% at 30% 20%, rgba(255, 255, 255, .10), transparent 45%),
+    var(--img-coal) center / var(--fit-coal, 160px auto), #161618 !important;
+}
+
+/* Presents: wrapping paper + ribbon + bow + gift tag */
+.challenge-solved {
+  border-radius: 6px !important;
+  background: var(--wrap) center / var(--wrap-fit, 120px auto) repeat !important;
+  overflow: visible !important;
+  margin-top: 14px;
+}
+.challenge-solved::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 9px), var(--ribbon) calc(50% - 9px), var(--ribbon) calc(50% + 9px), transparent calc(50% + 9px)),
+    linear-gradient(180deg, transparent calc(50% - 9px), var(--ribbon) calc(50% - 9px), var(--ribbon) calc(50% + 9px), transparent calc(50% + 9px)),
+    linear-gradient(180deg, rgba(255, 255, 255, .18), transparent 30%, rgba(0, 0, 0, .25));
+}
+.challenge-solved::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -22px;
+  width: 64px;
+  height: 36px;
+  z-index: 3;
+  transform: translateX(-50%);
+  background: var(--bow) center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .4));
+}
+.challenge-solved .challenge-inner {
+  display: inline-block;
+  min-width: 62%;
+  margin: .6rem auto !important;
+  padding: .35rem .8rem;
+  border-radius: 6px;
+  background: #fffaf0;
+  color: #3a2414;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .35);
+  transform: rotate(-2deg);
+}
+.challenge-solved .challenge-inner p { margin: 0; font-weight: 800; }
+.challenge-solved .challenge-inner span { font-size: .8rem; color: #8a5a2b; }
+.challenge-solved .challenge-inner span::before { content: "✓ "; color: #1f9d55; }
+
+/* Paper + ribbon pairings */
+.wrap-0 { --wrap-fit: var(--fit-wrap-0, 120px auto); --wrap: var(--img-wrap-0, url("/themes/evil-santa/static/spirit/ui/wrap-0.svg")); --ribbon: #1f9d55;
+  --bow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M32 22 C18 2 2 6 6 18 C9 27 22 26 32 22Z M32 22 C46 2 62 6 58 18 C55 27 42 26 32 22Z' fill='%231f9d55' stroke='rgba(0,0,0,.35)' stroke-width='1.5'/%3E%3Cpath d='M29 22 L22 36 L28 33 L31 36Z M35 22 L42 36 L36 33 L33 36Z' fill='%231f9d55' stroke='rgba(0,0,0,.35)' stroke-width='1.2'/%3E%3Ccircle cx='32' cy='22' r='5' fill='%231f9d55' stroke='rgba(0,0,0,.4)' stroke-width='1.5'/%3E%3C/svg%3E"); }
+.wrap-1 { --wrap-fit: var(--fit-wrap-1, 120px auto); --wrap: var(--img-wrap-1, url("/themes/evil-santa/static/spirit/ui/wrap-1.svg")); --ribbon: #d7263d;
+  --bow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M32 22 C18 2 2 6 6 18 C9 27 22 26 32 22Z M32 22 C46 2 62 6 58 18 C55 27 42 26 32 22Z' fill='%23d7263d' stroke='rgba(0,0,0,.35)' stroke-width='1.5'/%3E%3Cpath d='M29 22 L22 36 L28 33 L31 36Z M35 22 L42 36 L36 33 L33 36Z' fill='%23d7263d' stroke='rgba(0,0,0,.35)' stroke-width='1.2'/%3E%3Ccircle cx='32' cy='22' r='5' fill='%23d7263d' stroke='rgba(0,0,0,.4)' stroke-width='1.5'/%3E%3C/svg%3E"); }
+.wrap-2 { --wrap-fit: var(--fit-wrap-2, 120px auto); --wrap: var(--img-wrap-2, url("/themes/evil-santa/static/spirit/ui/wrap-2.svg")); --ribbon: #e9eef5;
+  --bow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M32 22 C18 2 2 6 6 18 C9 27 22 26 32 22Z M32 22 C46 2 62 6 58 18 C55 27 42 26 32 22Z' fill='%23e9eef5' stroke='rgba(0,0,0,.35)' stroke-width='1.5'/%3E%3Cpath d='M29 22 L22 36 L28 33 L31 36Z M35 22 L42 36 L36 33 L33 36Z' fill='%23e9eef5' stroke='rgba(0,0,0,.35)' stroke-width='1.2'/%3E%3Ccircle cx='32' cy='22' r='5' fill='%23e9eef5' stroke='rgba(0,0,0,.4)' stroke-width='1.5'/%3E%3C/svg%3E"); }
+.wrap-3 { --wrap-fit: var(--fit-wrap-3, 120px auto); --wrap: var(--img-wrap-3, url("/themes/evil-santa/static/spirit/ui/wrap-3.svg")); --ribbon: #ffcf3f;
+  --bow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M32 22 C18 2 2 6 6 18 C9 27 22 26 32 22Z M32 22 C46 2 62 6 58 18 C55 27 42 26 32 22Z' fill='%23ffcf3f' stroke='rgba(0,0,0,.35)' stroke-width='1.5'/%3E%3Cpath d='M29 22 L22 36 L28 33 L31 36Z M35 22 L42 36 L36 33 L33 36Z' fill='%23ffcf3f' stroke='rgba(0,0,0,.35)' stroke-width='1.2'/%3E%3Ccircle cx='32' cy='22' r='5' fill='%23ffcf3f' stroke='rgba(0,0,0,.4)' stroke-width='1.5'/%3E%3C/svg%3E"); }
+.wrap-4 { --wrap-fit: var(--fit-wrap-4, 120px auto); --wrap: var(--img-wrap-4, url("/themes/evil-santa/static/spirit/ui/wrap-4.svg")); --ribbon: #d7263d;
+  --bow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M32 22 C18 2 2 6 6 18 C9 27 22 26 32 22Z M32 22 C46 2 62 6 58 18 C55 27 42 26 32 22Z' fill='%23d7263d' stroke='rgba(0,0,0,.35)' stroke-width='1.5'/%3E%3Cpath d='M29 22 L22 36 L28 33 L31 36Z M35 22 L42 36 L36 33 L33 36Z' fill='%23d7263d' stroke='rgba(0,0,0,.35)' stroke-width='1.2'/%3E%3Ccircle cx='32' cy='22' r='5' fill='%23d7263d' stroke='rgba(0,0,0,.4)' stroke-width='1.5'/%3E%3C/svg%3E"); }
+.wrap-5 { --wrap-fit: var(--fit-wrap-5, 120px auto); --wrap: var(--img-wrap-5, url("/themes/evil-santa/static/spirit/ui/wrap-5.svg")); --ribbon: #ffcf3f;
+  --bow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M32 22 C18 2 2 6 6 18 C9 27 22 26 32 22Z M32 22 C46 2 62 6 58 18 C55 27 42 26 32 22Z' fill='%23ffcf3f' stroke='rgba(0,0,0,.35)' stroke-width='1.5'/%3E%3Cpath d='M29 22 L22 36 L28 33 L31 36Z M35 22 L42 36 L36 33 L33 36Z' fill='%23ffcf3f' stroke='rgba(0,0,0,.35)' stroke-width='1.2'/%3E%3Ccircle cx='32' cy='22' r='5' fill='%23ffcf3f' stroke='rgba(0,0,0,.4)' stroke-width='1.5'/%3E%3C/svg%3E"); }
+.wrap-6 { --wrap-fit: var(--fit-wrap-6, 120px auto); --wrap: var(--img-wrap-6, url("/themes/evil-santa/static/spirit/ui/wrap-6.svg")); --ribbon: #d9d4ff;
+  --bow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M32 22 C18 2 2 6 6 18 C9 27 22 26 32 22Z M32 22 C46 2 62 6 58 18 C55 27 42 26 32 22Z' fill='%23d9d4ff' stroke='rgba(0,0,0,.35)' stroke-width='1.5'/%3E%3Cpath d='M29 22 L22 36 L28 33 L31 36Z M35 22 L42 36 L36 33 L33 36Z' fill='%23d9d4ff' stroke='rgba(0,0,0,.35)' stroke-width='1.2'/%3E%3Ccircle cx='32' cy='22' r='5' fill='%23d9d4ff' stroke='rgba(0,0,0,.4)' stroke-width='1.5'/%3E%3C/svg%3E"); }
+.wrap-7 { --wrap-fit: var(--fit-wrap-7, 120px auto); --wrap: var(--img-wrap-7, url("/themes/evil-santa/static/spirit/ui/wrap-7.svg")); --ribbon: #b3142b;
+  --bow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 36'%3E%3Cpath d='M32 22 C18 2 2 6 6 18 C9 27 22 26 32 22Z M32 22 C46 2 62 6 58 18 C55 27 42 26 32 22Z' fill='%23b3142b' stroke='rgba(0,0,0,.35)' stroke-width='1.5'/%3E%3Cpath d='M29 22 L22 36 L28 33 L31 36Z M35 22 L42 36 L36 33 L33 36Z' fill='%23b3142b' stroke='rgba(0,0,0,.35)' stroke-width='1.2'/%3E%3Ccircle cx='32' cy='22' r='5' fill='%23b3142b' stroke='rgba(0,0,0,.4)' stroke-width='1.5'/%3E%3C/svg%3E"); }
+
+/* Hovering a present: a soft glow underneath that cycles red, green and gold */
+.challenge-solved:hover,
+.challenge-solved:focus-visible { animation: xmas-glow 2.4s linear infinite; }
+@keyframes xmas-glow {
+  0%, 100% { filter: drop-shadow(0 6px 10px rgba(255, 59, 59, .85)) drop-shadow(0 0 22px rgba(255, 59, 59, .5)); }
+  33% { filter: drop-shadow(0 6px 10px rgba(61, 220, 107, .85)) drop-shadow(0 0 22px rgba(61, 220, 107, .5)); }
+  66% { filter: drop-shadow(0 6px 10px rgba(255, 212, 71, .9)) drop-shadow(0 0 22px rgba(255, 212, 71, .55)); }
+}
+
+/* Custom lumps (lump-0..4.png with transparent backgrounds): the picture IS the card */
+html[data-lumps="on"] .challenge-coal,
+html[data-lumps="on"] .challenge-coal:hover,
+html[data-lumps="on"] .challenge-coal:focus-visible {
+  clip-path: none !important;
+  min-height: 130px;
+  background: var(--lump) center / contain no-repeat !important;
+}
+html[data-lumps="on"] .challenge-coal:hover,
+html[data-lumps="on"] .challenge-coal:focus-visible {
+  filter: drop-shadow(0 8px 10px rgba(255, 90, 30, .85)) drop-shadow(0 0 24px rgba(255, 120, 40, .55));
+}
+.lump-0 { --lump: var(--img-lump-0); }
+.lump-1 { --lump: var(--img-lump-1); }
+.lump-2 { --lump: var(--img-lump-2); }
+.lump-3 { --lump: var(--img-lump-3); }
+.lump-4 { --lump: var(--img-lump-4); }
+
+/* ---------- Challenge pop-up: coal until solved, then its wrapping paper ---------- */
+.modal-content.spirit-modal {
+  position: relative;
+  padding: 16px;
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .7);
+}
+.spirit-modal .modal-body {
+  position: relative;
+  z-index: 2;
+  border-radius: 10px;
+  background: rgba(16, 17, 20, .92);
+}
+.spirit-modal-coal {
+  background:
+    radial-gradient(70% 45% at 50% 105%, rgba(255, 90, 30, .55), transparent 70%),
+    var(--img-coal) center / var(--fit-coal, 160px auto), #161618 !important;
+}
+.spirit-modal-wrap {
+  background: var(--wrap) center / var(--wrap-fit, 120px auto) repeat !important;
+  animation: unwrap .9s cubic-bezier(.2, 1.6, .4, 1);
+}
+/* Solved: a warm golden panel with dark text */
+.spirit-modal-wrap .modal-body {
+  background: linear-gradient(160deg, #fff8e3 0%, #fbe7a8 55%, #f1cf6e 100%);
+  color: #3a2414;
+  box-shadow: inset 0 0 0 2px rgba(179, 120, 20, .55), inset 0 0 30px rgba(255, 255, 255, .5);
+}
+.spirit-modal-wrap .modal-body h1, .spirit-modal-wrap .modal-body h2, .spirit-modal-wrap .modal-body h3,
+.spirit-modal-wrap .modal-body h4, .spirit-modal-wrap .modal-body h5, .spirit-modal-wrap .modal-body p,
+.spirit-modal-wrap .modal-body span, .spirit-modal-wrap .modal-body label { color: #3a2414; text-shadow: none; }
+.spirit-modal-wrap .modal-body .nav-tabs { border-bottom-color: rgba(122, 75, 30, .35); }
+.spirit-modal-wrap .modal-body .nav-link { color: #7a4b1e; }
+.spirit-modal-wrap .modal-body .nav-link.active {
+  color: #3a2414;
+  background: rgba(255, 255, 255, .7);
+  border-color: rgba(122, 75, 30, .35) rgba(122, 75, 30, .35) transparent;
+}
+.spirit-modal-wrap .modal-body .form-control {
+  background: rgba(255, 255, 255, .85);
+  color: #2a1a0c;
+  border-color: rgba(122, 75, 30, .45);
+}
+.spirit-modal-wrap .modal-body a { color: #9b1b2c; }
+.spirit-modal-wrap .modal-body .btn-close { filter: none; opacity: .75; }
+
+/* Ribbon across the paper frame, and a bow on top */
+.spirit-modal-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 10px), var(--ribbon) calc(50% - 10px), var(--ribbon) calc(50% + 10px), transparent calc(50% + 10px)),
+    linear-gradient(180deg, transparent calc(50% - 10px), var(--ribbon) calc(50% - 10px), var(--ribbon) calc(50% + 10px), transparent calc(50% + 10px));
+}
+.spirit-modal-wrap::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -26px;
+  width: 84px;
+  height: 46px;
+  z-index: 3;
+  transform: translateX(-50%);
+  background: var(--bow) center / contain no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .5));
+}
+
+/* The moment coal turns into a present */
+.just-wrapped { animation: unwrap .9s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes unwrap {
+  0% { transform: scale(.6) rotate(-8deg); filter: brightness(2.2); }
+  60% { transform: scale(1.12) rotate(3deg); filter: brightness(1.3); }
+  100% { transform: scale(1) rotate(0); filter: none; }
+}
+
+/* ---------- Spirit meter (footer) ---------- */
+.spirit-meter-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--meter-h);
+  z-index: 1030;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1rem;
+  isolation: isolate;
+  background: #0b0c0e;
+  border-top: 2px solid color-mix(in srgb, var(--xmas-gold) var(--sp), #2b2c30);
+}
+.spirit-meter-bar::before { background-image: var(--img-meter); }
+.spirit-meter-bar::after {
+  background: linear-gradient(180deg,
+      color-mix(in srgb, #0d3a20 var(--sp), #0b0b0d),
+      color-mix(in srgb, #06210f var(--sp), #050506));
+  opacity: calc(.8 - .25 * var(--spirit));
+}
+.spirit-meter-label, .spirit-meter-pct { text-shadow: 0 1px 3px #000; }
+.spirit-meter-detail { color: #cfd2d8 !important; text-shadow: 0 1px 2px #000; }
+.spirit-meter-label {
+  font-family: "Mountains of Christmas", cursive;
+  font-size: 1.25rem;
+  white-space: nowrap;
+  color: #f4f1ea;
+}
+.spirit-meter {
+  position: relative;
+  flex: 1;
+  height: 18px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(-45deg, rgba(20, 21, 24, .85) 0 10px, rgba(32, 33, 38, .85) 10px 20px);
+  border: 1px solid rgba(255, 255, 255, .25);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .6);
+  overflow: visible;
+}
+.spirit-meter-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, .28) 0 10px, transparent 10px 20px),
+    linear-gradient(90deg, #1f9d55, #d7263d 60%, #ffcf3f);
+  background-size: 28px 28px, 100% 100%;
+  box-shadow: 0 0 12px rgba(255, 207, 63, .45);
+  transition: width 1.4s cubic-bezier(.2, .8, .2, 1);
+  animation: candy 1.2s linear infinite;
+}
+@keyframes candy { to { background-position: 28px 0, 0 0; } }
+.spirit-tick {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 24px;
+  margin-left: -1px;
+  background: #4a4c52;
+}
+.spirit-tick.reached { background: #fff; }
+.spirit-tick.big { width: auto; height: auto; top: -11px; margin-left: -10px; font-size: 18px; background: none; filter: grayscale(1) brightness(.7); }
+.spirit-tick.big.reached { filter: none; }
+.spirit-meter-pct { font-weight: 800; min-width: 3.2em; text-align: right; color: #f4f1ea; }
+.spirit-meter-detail { font-size: .8rem; color: #9a9ca2; white-space: nowrap; }
+
+/* ---------- Ignite button ---------- */
+.spirit-ignite {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--meter-h) + 14px);
+  transform: translateX(-50%);
+  z-index: 1032;
+  border: 0;
+  border-radius: 999px;
+  padding: .7rem 1.6rem;
+  font-family: "Mountains of Christmas", cursive;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2a1600;
+  background: radial-gradient(circle at 30% 30%, #fff6c8, #ffcf3f 45%, #f28c28);
+  box-shadow: 0 0 0 4px rgba(255, 207, 63, .25), 0 0 28px rgba(255, 180, 60, .8);
+  white-space: nowrap;
+  cursor: pointer;
+  animation: beckon 1.6s ease-in-out infinite;
+}
+.spirit-ignite[hidden] { display: none; }
+.spirit-ignite:disabled { opacity: .7; cursor: wait; animation: none; }
+.spirit-ignite:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.spirit-ignite-count { font-family: "Nunito", sans-serif; font-size: .9rem; font-weight: 800; margin-left: .4rem; }
+@keyframes beckon {
+  0%, 100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 4px rgba(255, 207, 63, .25), 0 0 22px rgba(255, 180, 60, .7); }
+  50% { transform: translateX(-50%) scale(1.06); box-shadow: 0 0 0 8px rgba(255, 207, 63, .15), 0 0 40px rgba(255, 180, 60, 1); }
+}
+
+.spirit-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1040; }
+.spirit-flash {
+  position: fixed; inset: 0; z-index: 1039; pointer-events: none;
+  background: radial-gradient(circle at 50% 10%, rgba(255, 245, 200, .95), rgba(255, 220, 120, .35) 40%, transparent 75%);
+  animation: flash .9s ease-out forwards;
+}
+@keyframes flash { from { opacity: 1; } to { opacity: 0; } }
+
+.spirit-toast {
+  position: fixed;
+  top: 110px;
+  left: 50%;
+  transform: translate(-50%, -20px);
+  z-index: 1041;
+  padding: .8rem 1.6rem;
+  border-radius: 14px;
+  text-align: center;
+  background: rgba(15, 16, 20, .92);
+  border: 2px solid var(--xmas-gold);
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+.spirit-toast small { display: block; text-transform: uppercase; letter-spacing: .18em; color: var(--xmas-gold); font-weight: 800; }
+.spirit-toast strong { font-family: "Mountains of Christmas", cursive; font-size: 1.8rem; }
+.spirit-toast.show { animation: toast 4s ease forwards; }
+@keyframes toast {
+  0% { opacity: 0; transform: translate(-50%, -20px); }
+  10%, 80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+
+.footer { margin-bottom: var(--meter-h); }
+
+@media (max-width: 575px) {
+  .spirit-meter-label, .spirit-meter-detail { display: none; }
+  .spirit-ignite { font-size: 1.2rem; padding: .55rem 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spirit-wreath .bulb.on, .spirit-garland .bulb.on, .spirit-meter-fill, .spirit-ignite, .just-wrapped, .challenge-solved, .spirit-modal-wrap { animation: none !important; }
+  :root.spirit-animate { transition: none; }
+  .spirit-scene-layer { transition: opacity .3s ease; transform: none !important; }
+  .spirit-scene-fill { filter: brightness(.42); }
+}
+
+/* ---------- 404 page ---------- */
+/* webp is drawn on top of png, so whichever file exists is shown */
+.spirit-404 {
+  min-height: calc(100vh - 160px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 2rem 1rem 3rem;
+}
+.spirit-404-card {
+  max-width: 520px;
+  text-align: center;
+  padding: 1.2rem 2rem 1.4rem;
+  border-radius: 16px;
+  color: #2b2018;
+  background: linear-gradient(160deg,
+      color-mix(in srgb, #fff8e3 var(--psp), #eef0f3) 0%,
+      color-mix(in srgb, #fbe7a8 var(--psp), #d6d9de) 55%,
+      color-mix(in srgb, #f1cf6e var(--psp), #bfc3c9) 100%);
+  border: 2px solid color-mix(in srgb, #b37814 var(--psp), #8a8e96);
+  box-shadow: inset 0 0 30px rgba(255, 255, 255, .45), 0 12px 40px rgba(0, 0, 0, .55);
+}
+.spirit-404-code {
+  font-family: "Mountains of Christmas", cursive;
+  font-size: 4.5rem;
+  line-height: 1;
+  color: color-mix(in srgb, #b3142b var(--psp), #5d6066);
+}
+.spirit-404-card h1 { font-size: 2rem; margin: .2rem 0 .4rem; color: #3a2414; }
+.spirit-404-card p { color: #4a3a2c; margin-bottom: 1rem; }
+.spirit-404-card .spirit-btn-ghost { color: #3a2414 !important; border-color: rgba(58, 36, 20, .45); }
+.spirit-404-card .spirit-btn-ghost:hover { background: rgba(58, 36, 20, .08); }
+.spirit-404-actions { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+.spirit-btn {
+  background: linear-gradient(180deg, #e0303f, #a3132a);
+  border: 2px solid var(--xmas-gold);
+  color: #fff !important;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: .45rem 1.3rem;
+}
+.spirit-btn:hover { filter: brightness(1.12); }
+.spirit-btn-ghost {
+  border: 2px solid rgba(255, 255, 255, .5);
+  color: #fff !important;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: .45rem 1.3rem;
+}
+.spirit-btn-ghost:hover { background: rgba(255, 255, 255, .12); }
+
+/* ---------- Page backgrounds (users, teams, scoreboard, login, ...) ---------- */
+/* The whole picture is shown between the columns, never cropped; a blurred copy fills
+   any gap. Its colour follows the team's Christmas spirit (full colour when logged out). */
+.spirit-page-bg {
+  position: fixed;
+  left: var(--col-w, 0px);
+  right: var(--col-w, 0px);
+  top: var(--nav-h, 58px);
+  bottom: var(--meter-eff);
+  z-index: -2;
+  overflow: hidden;
+  filter: grayscale(calc(1 - var(--pspirit))) brightness(calc(.75 + .25 * var(--pspirit)));
+}
+/* Blurred filler for any gap around the picture... */
+.spirit-page-bg::before,
+.spirit-page-bg::after {
+  content: "";
+  position: absolute;
+}
+.spirit-page-bg::before {
+  inset: -40px;
+  z-index: 0;
+  background:
+    var(--page-webp) center / cover no-repeat,
+    var(--page-png) center / cover no-repeat,
+    radial-gradient(circle at 50% 30%, #2a3a6e, #0b1024 70%);
+  filter: blur(22px) brightness(.45);
+}
+/* ...and the sharp, uncropped picture on top of it */
+.spirit-page-bg::after {
+  inset: 0;
+  z-index: 1;
+  background:
+    var(--page-webp) center bottom / contain no-repeat,
+    var(--page-png) center bottom / contain no-repeat;
+}
+html[data-spirit-bg] .jumbotron { background: transparent !important; }
+html[data-spirit-bg] .jumbotron h1 {
+  display: inline-block;
+  margin: 0;
+  padding: .3rem 1.4rem;
+  border-radius: 14px;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, .7);
+  background: linear-gradient(180deg,
+      color-mix(in srgb, #c4182f var(--psp), #2a2b30),
+      color-mix(in srgb, #8e0f22 var(--psp), #17181b));
+  border: 2px solid color-mix(in srgb, var(--xmas-gold) var(--psp), #44464c);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .55);
+}
+
+/* Panels: cool silver parchment at 0%, warming to gold as the spirit rises.
+   The text stays dark the whole way, so it's readable at every stage. */
+html[data-spirit-bg] main > .container,
+html[data-spirit-bg] .jumbotron .container:has(> :nth-child(2)) {
+  margin-bottom: 2rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: 16px;
+  color: #2b2018;
+  background: linear-gradient(160deg,
+      color-mix(in srgb, #fff8e3 var(--psp), #eef0f3) 0%,
+      color-mix(in srgb, #fbe7a8 var(--psp), #d6d9de) 55%,
+      color-mix(in srgb, #f1cf6e var(--psp), #bfc3c9) 100%);
+  border: 2px solid color-mix(in srgb, #b37814 var(--psp), #8a8e96);
+  box-shadow: inset 0 0 30px rgba(255, 255, 255, .45), 0 12px 40px rgba(0, 0, 0, .55);
+}
+html[data-spirit-bg] .jumbotron .container:has(> :nth-child(2)) { padding: 1.2rem 1.5rem; }
+html[data-spirit-bg] .jumbotron .container:has(> :nth-child(2)) h1 { margin-bottom: .6rem; }
+html[data-spirit-bg] .jumbotron .container:has(> :nth-child(2)) :is(h2, h3, h4, p, span, small) { color: #3a2414; text-shadow: none; }
+html[data-spirit-bg="auth"] main > .container,
+html[data-spirit-bg="join"] main > .container { max-width: 640px; }
+html[data-spirit-bg] main a:not(.btn) { color: #9b1b2c; }
+html[data-spirit-bg] main a:not(.btn):hover { color: #c4182f; }
+html[data-spirit-bg] .table {
+  --bs-table-bg: transparent;
+  --bs-table-color: #2b2018;
+  --bs-table-striped-bg: rgba(122, 75, 30, .08);
+  --bs-table-striped-color: #2b2018;
+  --bs-table-border-color: rgba(122, 75, 30, .25);
+}
+html[data-spirit-bg] .table thead th { color: #7a4b1e; border-bottom-color: rgba(122, 75, 30, .45); }
+html[data-spirit-bg] .form-control,
+html[data-spirit-bg] .form-select,
+html[data-spirit-bg] .custom-select {
+  background-color: rgba(255, 255, 255, .85);
+  color: #2a1a0c;
+  border-color: rgba(122, 75, 30, .4);
+}
+/* Bootstrap draws these for dark mode; switch them back for the light panels */
+html[data-spirit-bg] main .form-select {
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+html[data-spirit-bg] main .btn-close { filter: none; }
+/* Graphs sit on snowy, icy-white card (their labels are dark, so they stay readable) */
+html[data-spirit-bg] #score-graph,
+html[data-spirit-bg] [id$="-pie-graph"] {
+  border-radius: 12px;
+  padding: .5rem;
+  background: linear-gradient(180deg, #fbfdff 0%, #eef5fb 60%, #e2edf7 100%);
+  border: 1px solid #c8dbeb;
+  box-shadow: inset 0 2px 10px rgba(120, 160, 200, .25);
+}
+html[data-spirit-bg] .btn-primary, html[data-spirit-bg] .btn-success {
+  background: linear-gradient(180deg, #e0303f, #a3132a);
+  border: 2px solid var(--xmas-gold);
+  color: #fff;
+  font-weight: 800;
+}
+html[data-spirit-bg] .btn-primary:hover, html[data-spirit-bg] .btn-success:hover { filter: brightness(1.12); }
+
+/* ---------- Landing page comic ---------- */
+html[data-spirit-comic] .jumbotron { display: none; }
+.spirit-comic-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(180deg, rgba(6, 7, 12, .55), rgba(6, 7, 12, .8)),
+    var(--comic-bg-webp) center / cover no-repeat,
+    var(--comic-bg-png) center / cover no-repeat,
+    #0b0c10;
+  filter: blur(3px);
+  transform: scale(1.03);
+}
+.spirit-comic { padding: 4.5rem 1rem 2rem; }
+.spirit-comic-hint {
+  text-align: center;
+  color: #d9d6cf;
+  margin: 0 0 .8rem;
+  font-size: .95rem;
+  text-shadow: 0 1px 3px #000;
+}
+.spirit-comic-stage { display: flex; align-items: center; justify-content: center; gap: 1rem; }
+.spirit-book {
+  width: 100%;
+  margin: 0 auto;
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, .7));
+  transition: transform .7s ease;
+}
+.spirit-book.is-front { transform: translateX(-25%); }
+.spirit-book.is-back { transform: translateX(25%); }
+.spirit-comic-page { background: #f4efe3; overflow: hidden; }
+.spirit-comic-page img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; }
+.spirit-comic-cta {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  z-index: 5;
+  font-family: "Mountains of Christmas", cursive;
+  font-size: 1.6rem;
+  white-space: nowrap;
+  padding: .5rem 1.6rem;
+  box-shadow: 0 0 0 4px rgba(255, 207, 63, .3), 0 0 28px rgba(255, 180, 60, .8);
+  animation: beckon-cta 1.6s ease-in-out infinite;
+}
+@keyframes beckon-cta {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.06); }
+}
+.spirit-comic-nav {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid var(--xmas-gold);
+  background: linear-gradient(180deg, #e0303f, #a3132a);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .5);
+}
+.spirit-comic-nav:disabled { opacity: .35; }
+.spirit-comic-footer {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: .9rem;
+  color: #d9d6cf;
+  text-shadow: 0 1px 3px #000;
+}
+.spirit-comic-counter { font-weight: 800; }
+.spirit-comic-skip { color: var(--xmas-gold); }
+@media (max-width: 575px) { .spirit-comic-nav { display: none; } }
+@media (prefers-reduced-motion: reduce) { .spirit-comic-cta { animation: none; } }
+html[data-spirit-bg] .nav-pills .nav-link { color: #7a4b1e; font-weight: 700; }
+html[data-spirit-bg] .nav-pills .nav-link.active {
+  color: #fff;
+  background: linear-gradient(180deg, #e0303f, #a3132a);
+  border: 2px solid var(--xmas-gold);
+}

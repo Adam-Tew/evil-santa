@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+{%- set spirit_bg_map = {
+  "auth.login": "auth", "auth.register": "auth", "auth.reset_password": "auth", "auth.confirm": "auth",
+  "teams.listing": "teams", "teams.public": "teams",
+  "users.listing": "users", "users.public": "users",
+  "teams.join": "join", "teams.new": "join", "teams.invite": "join",
+  "teams.private": "team", "users.private": "user",
+  "scoreboard.listing": "scoreboard",
+  "views.notifications": "notifications", "views.settings": "settings",
+} -%}
+{#- A page can pick its own background with {% set spirit_page = "..." %} (e.g. the 404 page) -#}
+{%- set spirit_bg = spirit_page if spirit_page is defined else spirit_bg_map.get(request.endpoint) -%}
+{#- Each page has its own pair: [good column (left), evil column (right)] -#}
+{%- set spirit_col_pairs = {
+  "challenges": [3, 1], "auth": [4, 0], "teams": [2, 3], "users": [1, 2], "scoreboard": [0, 4],
+  "join": [5, 5], "team": [6, 6], "user": [7, 7], "notifications": [8, 8], "settings": [9, 9],
+  "404": [3, 1],
+} -%}
+{%- set spirit_cols = spirit_bg or request.endpoint == "challenges.listing" -%}
+{%- set spirit_pair = spirit_col_pairs.get(spirit_bg or "challenges") -%}
+{%- set spirit_comic = request.endpoint == "views.static_html" and (request.view_args or {}).get("route") == "index" -%}
+<html{% if spirit_bg %} data-spirit-bg="{{ spirit_bg }}"{% endif %}{% if spirit_comic %} data-spirit-comic="1"{% endif %}{% if spirit_cols %} data-spirit-cols="1"{% endif %}>
+<head>
+  <title>{{ title or Configs.ctf_name }}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="{{ Configs.ctf_small_icon }}" type="image/x-icon">
+
+  {{ meta | safe }}
+
+  {% block stylesheets %}
+    {{ Assets.css("assets/scss/main.scss") }}
+  {% endblock %}
+  <link rel="stylesheet" href="{{ url_for('views.themes_beta', theme='evil-santa', path='spirit/fonts/fonts.css') }}">
+  <link rel="stylesheet" href="{{ url_for('views.themes_beta', theme='evil-santa', path='spirit/spirit.css') }}">
+
+  {{ Plugins.styles }}
+
+  {# Evil Santa is dark-only: the light/dark switcher is removed on purpose #}
+  <script>document.documentElement.setAttribute("data-bs-theme", "dark");</script>
+  <script>
+    /* Player's Christmas-effects choices (Settings > Christmas effects), applied before the page draws */
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("evilsanta-prefs") || "{}");
+        var d = document.documentElement.dataset;
+        if (p.snow === false) d.prefSnow = "off";
+        if (p.columns === false) d.prefColumns = "simple";
+        if (p.garland === false) d.prefGarland = "off";
+        if (p.motion === false) d.prefMotion = "off";
+        if (p.dim === true) d.prefDim = "on";
+      } catch (e) {}
+    })();
+  </script>
+
+  <script type="text/javascript">
+      window.init = {
+          'urlRoot': "{{ request.script_root }}",
+          'csrfNonce': "{{ Session.nonce }}",
+          'userMode': "{{ Configs.user_mode }}",
+          'userId': {{ Session.id }},
+          'userName': {{ User.name | tojson }},
+          'userEmail': {{ User.email | tojson }},
+          'userVerified': {{ User.verified | tojson }},
+          'teamId': {{ Team.id | tojson }},
+          'teamName': {{ Team.name | tojson }},
+          'start': {{ Configs.start | tojson }},
+          'end': {{ Configs.end | tojson }},
+          'themeSettings': {{ Configs.theme_settings | tojson }},
+          'eventSounds': [
+            "/themes/evil-santa/static/sounds/notification.webm",
+            "/themes/evil-santa/static/sounds/notification.mp3",
+          ],
+      }
+  </script>
+
+  {{ Configs.theme_header }}
+</head>
+<body>
+{% include "components/navbar.html" %}
+
+{% if spirit_bg %}
+<div class="spirit-page-bg" aria-hidden="true"
+     style="--page-webp: url('{{ request.script_root }}/themes/evil-santa/static/spirit/pages/page-{{ spirit_bg }}.webp'); --page-png: url('{{ request.script_root }}/themes/evil-santa/static/spirit/pages/page-{{ spirit_bg }}.png');"></div>
+{% endif %}
+{% if spirit_cols %}
+{%- set colbase = request.script_root ~ "/themes/evil-santa/static/spirit/columns/" -%}
+<div class="spirit-col left" aria-hidden="true"
+     style="--col-webp: url('{{ colbase }}good-{{ spirit_pair[0] }}.webp'); --col-png: url('{{ colbase }}good-{{ spirit_pair[0] }}.png');"></div>
+<div class="spirit-col right" aria-hidden="true"
+     style="--col-webp: url('{{ colbase }}evil-{{ spirit_pair[1] }}.webp'); --col-png: url('{{ colbase }}evil-{{ spirit_pair[1] }}.png');"></div>
+{% endif %}
+<main role="main"{% if spirit_bg %} data-bs-theme="light"{% endif %}>
+  {% block content %}
+  {% endblock %}
+</main>
+
+{% include "components/snackbar.html" %}
+
+{% if Session.id %}
+  {% include "components/spirit_meter.html" %}
+{% endif %}
+
+<footer class="footer">
+  <div class="container text-center">
+    <a href="https://ctfd.io" class="text-secondary">
+      <small class="text-muted">
+        {% trans %}Powered by CTFd{% endtrans %}
+      </small>
+    </a>
+  </div>
+</footer>
+
+{% include "components/notifications.html" %}
+
+{% block scripts %}
+  {{ Assets.js("assets/js/page.js") }}
+{% endblock %}
+
+{{ Plugins.scripts }}
+
+<script defer src="{{ url_for('views.themes_beta', theme='evil-santa', path='spirit/spirit.js') }}"></script>
+
+{{ Configs.theme_footer }}
+</body>
+</html>

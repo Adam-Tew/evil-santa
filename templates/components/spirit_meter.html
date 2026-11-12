@@ -1,0 +1,22 @@
+<button type="button" id="spirit-ignite" class="spirit-ignite" hidden>
+  ✨ Ignite the Spirit! <span id="spirit-ignite-count" class="spirit-ignite-count"></span>
+</button>
+
+<div id="spirit-toast" class="spirit-toast" role="status" aria-live="polite"></div>
+
+<div class="spirit-meter-bar">
+  <span class="spirit-meter-label">Christmas Spirit</span>
+  <div
+      id="spirit-meter" class="spirit-meter" role="progressbar"
+      aria-label="Christmas Spirit" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+  >
+    <div id="spirit-meter-fill" class="spirit-meter-fill"></div>
+    {% for at in range(10, 90, 10) %}
+      <span class="spirit-tick" data-at="{{ at }}" style="left: {{ at }}%"></span>
+    {% endfor %}
+    <span class="spirit-tick big" data-at="90" style="left: 90%" title="Christmas is saved!">⭐</span>
+    <span class="spirit-tick big" data-at="100" style="left: 100%" title="???">🎁</span>
+  </div>
+  <span id="spirit-meter-pct" class="spirit-meter-pct">0%</span>
+  <span id="spirit-meter-detail" class="spirit-meter-detail"></span>
+</div>

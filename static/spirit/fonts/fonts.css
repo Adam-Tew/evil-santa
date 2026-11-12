@@ -1,0 +1,5 @@
+/* Self-hosted fonts (SIL Open Font License) so the theme works offline */
+@font-face { font-family: "Mountains of Christmas"; font-weight: 700; font-display: swap; src: url("mountains-of-christmas-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Nunito"; font-weight: 400; font-display: swap; src: url("nunito-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Nunito"; font-weight: 700; font-display: swap; src: url("nunito-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Nunito"; font-weight: 800; font-display: swap; src: url("nunito-latin-800-normal.woff2") format("woff2"); }

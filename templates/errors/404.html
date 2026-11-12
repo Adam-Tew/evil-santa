@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% set spirit_page = "404" %}
+
+{% block content %}
+<div class="spirit-404">
+  <div class="spirit-404-card">
+    <div class="spirit-404-code">404</div>
+    <h1>{% trans %}This page doesn't exist{% endtrans %}</h1>
+    <p>Santa isn't lost. He's just out here farming aura.</p>
+    <div class="spirit-404-actions">
+      <a class="btn spirit-btn" href="{{ url_for('challenges.listing') }}">Back to the challenges</a>
+      <a class="btn spirit-btn-ghost" href="{{ request.script_root }}/">Home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

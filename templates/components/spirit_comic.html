@@ -1,0 +1,36 @@
+{% set comic_base = request.script_root ~ "/themes/evil-santa/static/spirit/comic/" %}
+<div class="spirit-comic-bg" aria-hidden="true"
+     style="--comic-bg-webp: url('{{ request.script_root }}/themes/evil-santa/static/spirit/pages/page-auth.webp'); --comic-bg-png: url('{{ request.script_root }}/themes/evil-santa/static/spirit/pages/page-auth.png');"></div>
+
+<section class="spirit-comic" aria-label="The story of how Santa turned evil">
+  <p class="spirit-comic-hint">Click or drag a page corner, swipe, or use the arrow keys to read the story.</p>
+
+  <div class="spirit-comic-stage">
+    <button type="button" class="spirit-comic-nav prev" aria-label="Previous page">&#8249;</button>
+
+    <div id="spirit-book" class="spirit-book">
+      {% for i in range(10) %}
+      <div class="spirit-comic-page" data-density="{{ 'hard' if i in (0, 9) else 'soft' }}">
+        <img src="{{ comic_base }}comic-0{{ i }}.png"
+             data-fallback="{{ comic_base }}comic-0{{ i }}.webp"
+             onerror="if (this.dataset.fallback) { this.src = this.dataset.fallback; this.dataset.fallback = ''; }"
+             alt="{{ 'Front cover' if i == 0 else ('Back cover' if i == 9 else 'Page ' ~ i) }}"
+             draggable="false">
+        {% if i == 9 %}
+        <a class="spirit-comic-cta btn spirit-btn"
+           href="{{ url_for('challenges.listing') if Session.id else url_for('auth.register') }}">
+          {{ 'Join the fight!' if Session.id else 'Join the fight! Register' }}
+        </a>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <button type="button" class="spirit-comic-nav next" aria-label="Next page">&#8250;</button>
+  </div>
+
+  <div class="spirit-comic-footer">
+    <span id="spirit-comic-counter" class="spirit-comic-counter"></span>
+    <a class="spirit-comic-skip" href="{{ url_for('challenges.listing') if Session.id else url_for('auth.login') }}">Skip the story &rarr;</a>
+  </div>
+</section>
